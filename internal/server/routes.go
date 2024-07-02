@@ -4,7 +4,6 @@ import (
 	"Book_market_api/internal/controller"
 	"Book_market_api/internal/middlewares"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,7 +16,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	// r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(60 * time.Second))
+	// r.Use(middleware.Timeout(60 * time.Second))
 	//
 	r.Route("/api/v1", func(r chi.Router) {
 		// User
