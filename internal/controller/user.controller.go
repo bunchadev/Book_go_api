@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type UserController struct {
@@ -114,6 +115,7 @@ func (uc *UserController) LoginUser(w http.ResponseWriter, r *http.Request) {
 		response.ErrorResponse(w, 301)
 		return
 	}
+	defer r.Body.Close()
 	user, err := uc.userService.LoginUser(userLogin)
 	if err != nil {
 		response.ErrorResponse(w, 304)
@@ -124,14 +126,31 @@ func (uc *UserController) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 func (uc *UserController) GetNewToken(w http.ResponseWriter, r *http.Request) {
 	userId := r.Context().Value(middlewares.ContextUserID_v2).(string)
+	hour := r.Context().Value(middlewares.ContextHour).(time.Duration)
 	if userId == "" {
 		response.ErrorResponse(w, 301)
 		return
 	}
-	user, err := uc.userService.GetNewToken(userId)
+	user, err := uc.userService.GetNewToken(userId, hour)
 	if err != nil {
 		response.ErrorResponse(w, 305)
 		return
 	}
-	response.SuccessResponse(w, 309, user)
+	response.SuccessResponse(w, 300, user)
+}
+
+func (uc *UserController) LoginSocialMedia(w http.ResponseWriter, r *http.Request) {
+	var user *models.SocialMedia
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		response.ErrorResponse(w, 301)
+		return
+	}
+	defer r.Body.Close()
+	token, err := uc.userService.LoginSocialMedia(user)
+	if err != nil {
+		response.ErrorResponse(w, 304)
+		return
+	}
+	response.SuccessResponse(w, 300, token)
 }

@@ -8,15 +8,17 @@ type UserPagination struct {
 	Balance       float64 `json:"balance"`
 	Login_enabled bool    `json:"login_enabled"`
 	Depot_limit   int     `json:"depot_limit"`
+	Auth_method   string  `json:"auth_method"`
 	Create_at     string  `json:"create_at"`
 	Role          string  `json:"role" binding:"required"`
 }
 
 type UserCreate struct {
-	Username string `json:"username" binding:"required"`
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-	Role     string `json:"role" binding:"required"`
+	Username    string `json:"username" binding:"required"`
+	Email       string `json:"email" binding:"required"`
+	Password    string `json:"password" binding:"required"`
+	Auth_method string `json:"auth_method"`
+	Role        string `json:"role" binding:"required"`
 }
 
 type UserResponse struct {
@@ -25,6 +27,7 @@ type UserResponse struct {
 	Email       string `json:"email"`
 	Balance     string `json:"balance"`
 	Depot_limit int    `json:"depot_limit"`
+	Auth_method string `json:"auth_method"`
 	Role        string `json:"role"`
 }
 
@@ -48,4 +51,9 @@ type UpdateUser struct {
 type LoginUser struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type SocialMedia struct {
+	Type     string `json:"type"`
+	Username string `json:"username"`
 }

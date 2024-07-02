@@ -3,6 +3,7 @@ package service
 import (
 	"Book_market_api/internal/models"
 	"Book_market_api/internal/repo"
+	"time"
 )
 
 type UserService struct {
@@ -38,6 +39,11 @@ func (us *UserService) DeleteUser(id string) error {
 func (us *UserService) LoginUser(user *models.LoginUser) (*models.TokenResponse, error) {
 	return us.userRepo.LoginUser(user)
 }
-func (us *UserService) GetNewToken(id string) (*models.TokenResponse, error) {
-	return us.userRepo.GetNewToken(id)
+
+func (us *UserService) GetNewToken(id string, hour time.Duration) (*models.TokenResponse, error) {
+	return us.userRepo.GetNewToken(id, hour)
+}
+
+func (us *UserService) LoginSocialMedia(user *models.SocialMedia) (*models.TokenResponse, error) {
+	return us.userRepo.LoginSocialMedia(user)
 }

@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"Book_market_api/internal/repo"
 	"Book_market_api/response"
 	"Book_market_api/utils"
 	"context"
@@ -13,6 +14,7 @@ type ContextKey string
 const (
 	ContextUserID_v1 ContextKey = "userId"
 	ContextUserID_v2 ContextKey = "userId"
+	ContextHour      ContextKey = "hours"
 )
 
 func getTokenFromHeader(r *http.Request) string {
@@ -28,6 +30,10 @@ func Authenticate_v1(roles ...string) func(http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			token := getTokenFromHeader(r)
 			if token == "" {
+				response.ErrorResponse(w, 305)
+				return
+			}
+			if check := repo.CheckAccess_token(token); !check {
 				response.ErrorResponse(w, 305)
 				return
 			}
@@ -49,12 +55,18 @@ func Authenticate_v2(next http.Handler) http.Handler {
 			response.ErrorResponse(w, 305)
 			return
 		}
-		userId, err := utils.VerifyToken_v2(token)
+		check := repo.CheckRefresh_token(token)
+		if !check {
+			response.ErrorResponse(w, 305)
+			return
+		}
+		userId, hour, err := utils.VerifyToken_v2(token)
 		if err != nil {
 			response.ErrorResponse(w, 305)
 			return
 		}
 		ctx := context.WithValue(r.Context(), ContextUserID_v2, userId)
+		ctx = context.WithValue(ctx, ContextHour, hour)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

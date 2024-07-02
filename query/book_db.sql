@@ -23,6 +23,13 @@ CREATE TABLE books (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'auth_type') THEN
+        CREATE TYPE auth_type AS ENUM ('credentials', 'github', 'google');
+    END IF;
+END$$;
+
 -- Bảng lưu trữ thông tin về người dùng
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -32,20 +39,10 @@ CREATE TABLE users (
     balance NUMERIC(10, 2) DEFAULT 1000000.00,
     login_enabled BOOLEAN DEFAULT TRUE, 
     depot_limit INTEGER DEFAULT 10,
+    auth_method auth_type NOT NULL DEFAULT 'credentials',
     role_id UUID REFERENCES roles(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
---Thêm mới cột type
-
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'auth_type') THEN
-        CREATE TYPE auth_type AS ENUM ('credentials', 'github', 'google');
-    END IF;
-END$$;
-
-ALTER TABLE users
-ADD COLUMN auth_method auth_type NOT NULL DEFAULT 'credentials'; 
 
 -- Bảng lưu trữ thông tin về sách của người dùng
 CREATE TABLE user_books (
@@ -116,6 +113,18 @@ CREATE TABLE evaluate (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE tokens (
+    user_id UUID PRIMARY KEY,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT NOT NULL,
+    access_token_expiry TIMESTAMP NOT NULL,
+    refresh_token_expiry TIMESTAMP NOT NULL,
+    revoked BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT (now() AT TIME ZONE 'Asia/Ho_Chi_Minh'),
+    updated_at TIMESTAMP DEFAULT (now() AT TIME ZONE 'Asia/Ho_Chi_Minh'),
+    CONSTRAINT fk_user FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Tạo danh mục sách
 INSERT INTO categories (id, name) VALUES
   ('38c107fa-d0ec-4e1f-8db0-c012fb7f46f7', 'Trinh thám - Kinh dị'),
@@ -162,8 +171,8 @@ INSERT INTO roles (id, name) VALUES
 -- Thêm dữ liệu cho bảng users
 INSERT INTO users (id,username, email, password, balance,role_id)
 VALUES
-  ('D123ADBF-DBBD-42FC-86F8-E28C0D3C6B78','trungnguyen1', 'tn0888888@gmail.com', '1232003', 1000000.00,'38c107fa-d0ec-4e1f-8db0-c012fb7f46f7'),
-  (uuid_generate_v4(),'trungnguyen2', 'trungvjppro23@gmail.com', '1232003', 1000000.00,'0e0da8e1-95e4-4d9b-81a1-8590b9b37c27'),
+  ('D123ADBF-DBBD-42FC-86F8-E28C0D3C6B78','trungnguyen1', 'trungnguyen1@gmail.com', '1232003', 1000000.00,'38c107fa-d0ec-4e1f-8db0-c012fb7f46f7'),
+  (uuid_generate_v4(),'trungnguyen2', 'trungnguyen2@gmail.com', '1232003', 1000000.00,'0e0da8e1-95e4-4d9b-81a1-8590b9b37c27'),
   (uuid_generate_v4(),'trungnguyen_3', 'trungnguyen_3@example.com', '1232003', 1000000.00,'6c9839cf-f5f1-4f05-8b29-1a6a35b16688'),
   (uuid_generate_v4(),'trungnguyen_4', 'trungnguyen_4@example.com', '1232003', 1000000.00,'7b2fe3b5-8f2a-4487-8622-1fd72734d6f0');
 
@@ -180,3 +189,11 @@ VALUES
   ('D123ADBF-DBBD-42FC-86F8-E28C0D3C6B78', 'c3368a4e-1993-468f-9c6e-4e409ee1a396', 45000, 40, 10),
   ('D123ADBF-DBBD-42FC-86F8-E28C0D3C6B78', 'd476b026-2594-47f6-8199-fa19a1b4982c', 68500, 35, 10);
 
+
+-- DO $$ DECLARE
+--     r RECORD;
+-- BEGIN
+--     FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+--         EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+--     END LOOP;
+-- END $$;
